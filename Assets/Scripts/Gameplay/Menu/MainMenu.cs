@@ -4,7 +4,7 @@ using UnityEngine.SceneManagement; // Thư viện bắt buộc để chuyển Sc
 public class MainMenu : MonoBehaviour
 {
     [Header("Tên Scene sẽ chuyển tới")]
-    [SerializeField] private string gameSceneName = "GameScene";
+    [SerializeField] private string gameSceneName = "Hub";
 
     // Hàm này sẽ được gọi khi bấm nút Play
     public void PlayGame()
