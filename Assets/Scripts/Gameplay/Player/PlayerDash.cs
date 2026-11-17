@@ -1,5 +1,5 @@
-
 using UnityEngine;
+using UnityEngine.InputSystem;
 using System.Collections;
 
 [RequireComponent(typeof(Rigidbody2D))]
@@ -32,9 +32,23 @@ public class PlayerDash : MonoBehaviour
 
     private void Update()
     {
-        if (playerStatus.isDead) return;
+        if (Time.timeScale <= 0.001f || playerStatus.isDead) return;
 
-        if (Input.GetKeyDown(KeyCode.Space) && canDash && !isDashing)
+        bool dashInput = false;
+
+        // Đọc phím Space từ New Input System
+        if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
+        {
+            dashInput = true;
+        }
+
+        // Đọc nút A / X trên tay cầm
+        if (Gamepad.current != null && Gamepad.current.buttonSouth.wasPressedThisFrame)
+        {
+            dashInput = true;
+        }
+
+        if (dashInput && canDash && !isDashing)
         {
             StartCoroutine(Dash());
         }

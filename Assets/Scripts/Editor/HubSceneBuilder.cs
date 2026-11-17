@@ -4,13 +4,21 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEditor.Events;
 using TMPro;
+using System.Linq;
 
 public static class HubSceneBuilder
 {
     private const string HUB_SCENE_PATH = "Assets/Scenes/Hub.unity";
-    private const string MALE_SPRITE_PATH = "Assets/Art/Sprites/The Male adventurer - Free/The Male adventurer - Free/Idle/Idle_down.png";
-    private const string FEMALE_SPRITE_PATH = "Assets/The Female Adventurer - Free/The Female Adventurer - Free/Idle/Idle_down.png";
     private const string BG_IMAGE_PATH = "Assets/Art/UI/imagegame.png";
+
+    // Sprites bước đi sang phải (8 frames)
+    private const string MALE_WALK_TEXTURE_PATH = "Assets/Art/Sprites/The Male adventurer - Free/The Male adventurer - Free/Walk/walk_right_down.png";
+    private const string FEMALE_WALK_TEXTURE_PATH = "Assets/The Female Adventurer - Free/The Female Adventurer - Free/Walk/walk_Right_Down.png";
+
+    // 3 Vũ khí được chọn từ items_outdated
+    private const string WEAPON_1_PATH = "Assets/items_outdated/item_outdated1.png";  // Kiếm Ánh Sáng
+    private const string WEAPON_2_PATH = "Assets/items_outdated/item_outdated2.png";  // Rìu Huyết Thần
+    private const string WEAPON_3_PATH = "Assets/items_outdated/item_outdated56.png"; // Trượng Ma Năng
 
     [MenuItem("Dark Minutes/Setup Hub UI (Tự động dựng Scene Hub)")]
     public static void BuildHubUI()
@@ -24,7 +32,7 @@ public static class HubSceneBuilder
 
         var scene = EditorSceneManager.OpenScene(HUB_SCENE_PATH, OpenSceneMode.Single);
 
-        // 2. Xóa các đối tượng UI cũ nếu đã tồn tại để tạo mới hoàn toàn sạch sẽ
+        // 2. Dọn dẹp sạch sẽ các GameObject cũ
         GameObject oldCanvas = GameObject.Find("Canvas");
         if (oldCanvas != null) Object.DestroyImmediate(oldCanvas);
 
@@ -34,7 +42,7 @@ public static class HubSceneBuilder
         GameObject oldController = GameObject.Find("HubController");
         if (oldController != null) Object.DestroyImmediate(oldController);
 
-        // Đảm bảo có Camera
+        // Đảm bảo Camera tồn tại
         Camera mainCam = Camera.main;
         if (mainCam == null)
         {
@@ -51,7 +59,7 @@ public static class HubSceneBuilder
         eventSystemGo.AddComponent<UnityEngine.EventSystems.EventSystem>();
         eventSystemGo.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
 
-        // 4. Tạo Canvas & Scaler
+        // 4. Tạo Canvas & Scaler chuẩn Full HD 1920x1080
         GameObject canvasGo = new GameObject("Canvas");
         Canvas canvas = canvasGo.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -67,10 +75,9 @@ public static class HubSceneBuilder
         GameObject controllerGo = new GameObject("HubController");
         HubManager hubManager = controllerGo.AddComponent<HubManager>();
 
-        // Lấy font TMP mặc định
         TMP_FontAsset defaultFont = TMP_Settings.defaultFontAsset;
 
-        // 6. Tạo Background (Nền)
+        // 6. Background nền & Overlay tối
         GameObject bgGo = CreateUIElement("Background", canvasGo.transform);
         SetFullScreenStretch(bgGo.GetComponent<RectTransform>());
         Image bgImg = bgGo.AddComponent<Image>();
@@ -78,124 +85,157 @@ public static class HubSceneBuilder
         if (bgSprite != null)
         {
             bgImg.sprite = bgSprite;
-            bgImg.color = new Color(0.2f, 0.2f, 0.25f, 1f); // Màu tối huyền bí
+            bgImg.color = new Color(0.22f, 0.22f, 0.28f, 1f);
         }
         else
         {
             bgImg.color = new Color(0.07f, 0.07f, 0.1f, 1f);
         }
 
-        // Tạo Dark Overlay mờ
         GameObject overlayGo = CreateUIElement("DarkOverlay", canvasGo.transform);
         SetFullScreenStretch(overlayGo.GetComponent<RectTransform>());
         Image overlayImg = overlayGo.AddComponent<Image>();
-        overlayImg.color = new Color(0.03f, 0.03f, 0.05f, 0.7f);
+        overlayImg.color = new Color(0.03f, 0.03f, 0.05f, 0.72f);
 
-        // 7. Tạo Header (Tiêu đề trên cùng)
-        GameObject headerGo = CreateText("HeaderTitle", canvasGo.transform, "A.R.K PREPARATION DOCK", 44, FontStyles.Bold, new Color(1f, 0.82f, 0.25f, 1f), defaultFont);
+        // 7. Header tiêu đề
+        GameObject headerGo = CreateText("HeaderTitle", canvasGo.transform, "A.R.K TACTICAL DOCK", 46, FontStyles.Bold, new Color(1f, 0.85f, 0.25f, 1f), defaultFont);
         RectTransform headerRt = headerGo.GetComponent<RectTransform>();
         headerRt.anchorMin = new Vector2(0.5f, 1f);
         headerRt.anchorMax = new Vector2(0.5f, 1f);
         headerRt.pivot = new Vector2(0.5f, 1f);
-        headerRt.anchoredPosition = new Vector2(0, -40);
-        headerRt.sizeDelta = new Vector2(1200, 60);
+        headerRt.anchoredPosition = new Vector2(0, -35);
+        headerRt.sizeDelta = new Vector2(1200, 55);
 
-        GameObject subHeaderGo = CreateText("HeaderSubtitle", canvasGo.transform, "CHUẨN BỊ CHIẾN BINH VÀ TRANG BỊ TRƯỚC KHI TIẾN VÀO KHU RỪNG ELDERVALE (00:20:00)", 18, FontStyles.Normal, new Color(0.8f, 0.8f, 0.8f, 1f), defaultFont);
+        GameObject subHeaderGo = CreateText("HeaderSubtitle", canvasGo.transform, "LỰA CHỌN CHIẾN BINH VÀ VŨ KHÍ TRƯỚC KHI TIẾN VÀO KHU RỪNG ELDERVALE (00:20:00)", 17, FontStyles.Normal, new Color(0.85f, 0.85f, 0.85f, 1f), defaultFont);
         RectTransform subHeaderRt = subHeaderGo.GetComponent<RectTransform>();
         subHeaderRt.anchorMin = new Vector2(0.5f, 1f);
         subHeaderRt.anchorMax = new Vector2(0.5f, 1f);
         subHeaderRt.pivot = new Vector2(0.5f, 1f);
-        subHeaderRt.anchoredPosition = new Vector2(0, -100);
-        subHeaderRt.sizeDelta = new Vector2(1200, 40);
+        subHeaderRt.anchoredPosition = new Vector2(0, -92);
+        subHeaderRt.sizeDelta = new Vector2(1200, 35);
 
         // =========================================================================
-        // 8. BÊN TRÁI: PANEL CHỌN NHÂN VẬT
+        // 8. BÊN TRÁI: PANEL CHỌN CHIẾN BINH (CÓ HOẠT ẢNH BƯỚC ĐI TẠI CHỖ)
         // =========================================================================
-        GameObject charPanel = CreatePanel("CharacterSelectionPanel", canvasGo.transform, new Vector2(-420, -15), new Vector2(760, 720), new Color(0.1f, 0.11f, 0.15f, 0.92f));
+        GameObject charPanel = CreatePanel("CharacterSelectionPanel", canvasGo.transform, new Vector2(-430, -15), new Vector2(740, 720), new Color(0.1f, 0.11f, 0.15f, 0.94f));
 
-        // Tiêu đề Panel Nhân vật
-        GameObject charTitle = CreateText("Title", charPanel.transform, "1. CHỌN CHIẾN BINH", 28, FontStyles.Bold, new Color(1f, 0.85f, 0.3f, 1f), defaultFont);
-        SetAnchored(charTitle.GetComponent<RectTransform>(), new Vector2(0, 310), new Vector2(600, 50));
+        GameObject charTitle = CreateText("Title", charPanel.transform, "1. CHỌN CHIẾN BINH", 27, FontStyles.Bold, new Color(1f, 0.85f, 0.3f, 1f), defaultFont);
+        SetAnchored(charTitle.GetComponent<RectTransform>(), new Vector2(0, 310), new Vector2(600, 45));
 
-        // Nút Nam (Aiden) & Nữ (Elena)
-        Button maleBtn = CreateButton("MaleButton", charPanel.transform, "AIDEN (NAM)", new Vector2(-150, 240), new Vector2(260, 55), defaultFont);
-        Button femaleBtn = CreateButton("FemaleButton", charPanel.transform, "ELENA (NỮ)", new Vector2(150, 240), new Vector2(260, 55), defaultFont);
+        // Nút chọn Nam & Nữ
+        Button maleBtn = CreateButton("MaleButton", charPanel.transform, "AIDEN (NAM)", new Vector2(-150, 245), new Vector2(250, 52), defaultFont);
+        Button femaleBtn = CreateButton("FemaleButton", charPanel.transform, "ELENA (NỮ)", new Vector2(150, 245), new Vector2(250, 52), defaultFont);
 
-        // Khung Preview Nhân vật
-        GameObject previewBox = CreatePanel("PreviewBox", charPanel.transform, new Vector2(0, 70), new Vector2(240, 260), new Color(0.06f, 0.07f, 0.09f, 1f));
-        GameObject previewImgGo = CreateUIElement("CharacterImage", previewBox.transform);
+        // Khung Preview Nhân vật với Animation bước đi
+        GameObject previewBox = CreatePanel("PreviewBox", charPanel.transform, new Vector2(0, 75), new Vector2(240, 240), new Color(0.06f, 0.07f, 0.09f, 1f));
+        GameObject previewImgGo = CreateUIElement("CharacterAnimatedImage", previewBox.transform);
         Image previewImg = previewImgGo.AddComponent<Image>();
         previewImg.preserveAspect = true;
-        SetAnchored(previewImgGo.GetComponent<RectTransform>(), Vector2.zero, new Vector2(220, 240));
+        SetAnchored(previewImgGo.GetComponent<RectTransform>(), Vector2.zero, new Vector2(200, 200));
+
+        // Gắn component Animation bước đi
+        UICharacterAnimator charAnim = previewImgGo.AddComponent<UICharacterAnimator>();
+
+        // Load 8 frames bước đi cho Nam và Nữ
+        Sprite[] maleFrames = AssetDatabase.LoadAllAssetsAtPath(MALE_WALK_TEXTURE_PATH)
+            .OfType<Sprite>()
+            .OrderBy(s => s.name)
+            .ToArray();
+
+        Sprite[] femaleFrames = AssetDatabase.LoadAllAssetsAtPath(FEMALE_WALK_TEXTURE_PATH)
+            .OfType<Sprite>()
+            .OrderBy(s => s.name)
+            .ToArray();
+
+        charAnim.maleWalkFrames = maleFrames;
+        charAnim.femaleWalkFrames = femaleFrames;
 
         // Tên và mô tả nhân vật
-        GameObject charNameGo = CreateText("CharacterNameText", charPanel.transform, "AIDEN (CHIẾN BINH NAM)", 24, FontStyles.Bold, new Color(1f, 0.85f, 0.3f, 1f), defaultFont);
-        SetAnchored(charNameGo.GetComponent<RectTransform>(), new Vector2(0, -95), new Vector2(680, 40));
+        GameObject charNameGo = CreateText("CharacterNameText", charPanel.transform, "AIDEN (CHIẾN BINH NAM)", 23, FontStyles.Bold, new Color(1f, 0.85f, 0.3f, 1f), defaultFont);
+        SetAnchored(charNameGo.GetComponent<RectTransform>(), new Vector2(0, -90), new Vector2(680, 40));
 
-        GameObject charDescGo = CreateText("CharacterDescText", charPanel.transform, "Thông tin mô tả...", 19, FontStyles.Normal, new Color(0.9f, 0.9f, 0.9f, 1f), defaultFont);
+        GameObject charDescGo = CreateText("CharacterDescText", charPanel.transform, "Thông tin nhân vật...", 18, FontStyles.Normal, new Color(0.9f, 0.9f, 0.9f, 1f), defaultFont);
         TextMeshProUGUI charDescTmp = charDescGo.GetComponent<TextMeshProUGUI>();
-        charDescTmp.alignment = TextAlignmentOptions.Top;
-        SetAnchored(charDescGo.GetComponent<RectTransform>(), new Vector2(0, -210), new Vector2(680, 160));
+        charDescTmp.alignment = TextAlignmentOptions.TopLeft;
+        charDescTmp.lineSpacing = 12;
+        SetAnchored(charDescGo.GetComponent<RectTransform>(), new Vector2(0, -210), new Vector2(660, 160));
 
         // =========================================================================
-        // 9. BÊN PHẢI: PANEL CHỌN VŨ KHÍ
+        // 9. BÊN PHẢI: PANEL CHỌN VŨ KHÍ CỔ ĐẠI (TỪ items_outdated)
         // =========================================================================
-        GameObject wepPanel = CreatePanel("WeaponSelectionPanel", canvasGo.transform, new Vector2(420, -15), new Vector2(760, 720), new Color(0.1f, 0.11f, 0.15f, 0.92f));
+        GameObject wepPanel = CreatePanel("WeaponSelectionPanel", canvasGo.transform, new Vector2(430, -15), new Vector2(740, 720), new Color(0.1f, 0.11f, 0.15f, 0.94f));
 
-        // Tiêu đề Panel Vũ khí
-        GameObject wepTitle = CreateText("Title", wepPanel.transform, "2. CHỌN VŨ KHÍ XUẤT PHÁT", 28, FontStyles.Bold, new Color(1f, 0.85f, 0.3f, 1f), defaultFont);
-        SetAnchored(wepTitle.GetComponent<RectTransform>(), new Vector2(0, 310), new Vector2(600, 50));
+        GameObject wepTitle = CreateText("Title", wepPanel.transform, "2. KHO VŨ KHÍ CỔ ĐẠI", 27, FontStyles.Bold, new Color(1f, 0.85f, 0.3f, 1f), defaultFont);
+        SetAnchored(wepTitle.GetComponent<RectTransform>(), new Vector2(0, 310), new Vector2(600, 45));
 
-        // 3 Nút Vũ khí
-        Button pistolBtn = CreateButton("PistolButton", wepPanel.transform, "PISTOL", new Vector2(-220, 240), new Vector2(200, 55), defaultFont);
-        Button shotgunBtn = CreateButton("ShotgunButton", wepPanel.transform, "SHOTGUN", new Vector2(0, 240), new Vector2(200, 55), defaultFont);
-        Button arcRifleBtn = CreateButton("ArcRifleButton", wepPanel.transform, "ARC RIFLE", new Vector2(220, 240), new Vector2(200, 55), defaultFont);
+        // 3 Nút chọn vũ khí
+        Button wep1Btn = CreateButton("Weapon1Button", wepPanel.transform, "KIẾM ÁNH SÁNG", new Vector2(-220, 245), new Vector2(200, 52), defaultFont);
+        Button wep2Btn = CreateButton("Weapon2Button", wepPanel.transform, "RÌU HUYẾT THẦN", new Vector2(0, 245), new Vector2(200, 52), defaultFont);
+        Button wep3Btn = CreateButton("Weapon3Button", wepPanel.transform, "TRƯỢNG MA NĂNG", new Vector2(220, 245), new Vector2(200, 52), defaultFont);
 
         // Khung chi tiết vũ khí
-        GameObject wepBox = CreatePanel("WeaponDetailBox", wepPanel.transform, new Vector2(0, 10), new Vector2(680, 370), new Color(0.06f, 0.07f, 0.09f, 1f));
+        GameObject wepBox = CreatePanel("WeaponDetailBox", wepPanel.transform, new Vector2(0, 5), new Vector2(680, 380), new Color(0.06f, 0.07f, 0.09f, 1f));
 
-        GameObject wepNameGo = CreateText("WeaponNameText", wepBox.transform, "VŨ KHÍ: PISTOL CƠ BẢN", 24, FontStyles.Bold, new Color(1f, 0.85f, 0.3f, 1f), defaultFont);
-        SetAnchored(wepNameGo.GetComponent<RectTransform>(), new Vector2(0, 135), new Vector2(640, 40));
+        // Khung Icon xem trước của vũ khí
+        GameObject wepIconBox = CreatePanel("WeaponIconBox", wepBox.transform, new Vector2(-230, 70), new Vector2(130, 130), new Color(0.1f, 0.12f, 0.18f, 1f));
+        GameObject wepIconGo = CreateUIElement("WeaponIcon", wepIconBox.transform);
+        Image wepIconImg = wepIconGo.AddComponent<Image>();
+        wepIconImg.preserveAspect = true;
+        SetAnchored(wepIconGo.GetComponent<RectTransform>(), Vector2.zero, new Vector2(100, 100));
 
-        GameObject wepStatsGo = CreateText("WeaponStatsText", wepBox.transform, "Thông số vũ khí...", 21, FontStyles.Normal, new Color(0.92f, 0.92f, 0.92f, 1f), defaultFont);
+        // Tên và thông số vũ khí
+        GameObject wepNameGo = CreateText("WeaponNameText", wepBox.transform, "KIẾM ÁNH SÁNG (ECLIPSE BLADE)", 23, FontStyles.Bold, new Color(1f, 0.85f, 0.3f, 1f), defaultFont);
+        TextMeshProUGUI wepNameTmp = wepNameGo.GetComponent<TextMeshProUGUI>();
+        wepNameTmp.alignment = TextAlignmentOptions.Left;
+        SetAnchored(wepNameGo.GetComponent<RectTransform>(), new Vector2(80, 110), new Vector2(440, 40));
+
+        GameObject wepStatsGo = CreateText("WeaponStatsText", wepBox.transform, "Thông số vũ khí...", 19, FontStyles.Normal, new Color(0.92f, 0.92f, 0.92f, 1f), defaultFont);
         TextMeshProUGUI wepStatsTmp = wepStatsGo.GetComponent<TextMeshProUGUI>();
         wepStatsTmp.alignment = TextAlignmentOptions.TopLeft;
-        wepStatsTmp.lineSpacing = 15;
-        SetAnchored(wepStatsGo.GetComponent<RectTransform>(), new Vector2(0, -35), new Vector2(620, 250));
+        wepStatsTmp.lineSpacing = 12;
+        SetAnchored(wepStatsGo.GetComponent<RectTransform>(), new Vector2(0, -70), new Vector2(620, 210));
+
+        // Load 3 sprite vũ khí từ items_outdated
+        Sprite wep1Sprite = AssetDatabase.LoadAssetAtPath<Sprite>(WEAPON_1_PATH);
+        Sprite wep2Sprite = AssetDatabase.LoadAssetAtPath<Sprite>(WEAPON_2_PATH);
+        Sprite wep3Sprite = AssetDatabase.LoadAssetAtPath<Sprite>(WEAPON_3_PATH);
 
         // Ghi chú cơ chế
-        GameObject noteGo = CreateText("TacticalNote", wepPanel.transform, "* Gợi ý: Mỗi vũ khí định hình lối chơi riêng. Vũ khí có thể tiếp tục được nâng cấp trong trận sinh tồn.", 16, FontStyles.Italic, new Color(0.7f, 0.7f, 0.7f, 1f), defaultFont);
+        GameObject noteGo = CreateText("TacticalNote", wepPanel.transform, "* Gợi ý: Mỗi loại vũ khí định hình lối chơi độc nhất. Hãy chọn vũ khí phù hợp với phong cách sinh tồn của bạn.", 16, FontStyles.Italic, new Color(0.72f, 0.72f, 0.72f, 1f), defaultFont);
         SetAnchored(noteGo.GetComponent<RectTransform>(), new Vector2(0, -260), new Vector2(680, 50));
 
         // =========================================================================
         // 10. PHÍA DƯỚI: NÚT BACK VÀ NÚT START/DEPLOY
         // =========================================================================
-        Button backBtn = CreateButton("BackButton", canvasGo.transform, "< QUAY LẠI MENU", new Vector2(-420, -460), new Vector2(300, 65), defaultFont);
+        Button backBtn = CreateButton("BackButton", canvasGo.transform, "< QUAY LẠI MENU", new Vector2(-430, -460), new Vector2(300, 65), defaultFont);
         backBtn.GetComponent<Image>().color = new Color(0.28f, 0.28f, 0.35f, 1f);
 
-        Button deployBtn = CreateButton("DeployButton", canvasGo.transform, "VÀO TRẬN (DEPLOY) >", new Vector2(420, -460), new Vector2(450, 75), defaultFont);
-        deployBtn.GetComponent<Image>().color = new Color(0.75f, 0.16f, 0.16f, 1f); // Đỏ huyết sắc nổi bật
+        Button deployBtn = CreateButton("DeployButton", canvasGo.transform, "VÀO TRẬN (DEPLOY) >", new Vector2(430, -460), new Vector2(440, 75), defaultFont);
+        deployBtn.GetComponent<Image>().color = new Color(0.75f, 0.16f, 0.16f, 1f);
         deployBtn.GetComponentInChildren<TextMeshProUGUI>().fontSize = 26;
 
         // =========================================================================
         // 11. GÁN THAM CHIẾU VÀO HUB MANAGER
         // =========================================================================
+        hubManager.characterAnimator = charAnim;
         hubManager.characterPreviewImage = previewImg;
         hubManager.characterNameText = charNameGo.GetComponent<TextMeshProUGUI>();
         hubManager.characterDescText = charDescTmp;
 
-        hubManager.malePreviewSprite = AssetDatabase.LoadAssetAtPath<Sprite>(MALE_SPRITE_PATH);
-        hubManager.femalePreviewSprite = AssetDatabase.LoadAssetAtPath<Sprite>(FEMALE_SPRITE_PATH);
-
         hubManager.maleButton = maleBtn;
         hubManager.femaleButton = femaleBtn;
 
-        hubManager.weaponNameText = wepNameGo.GetComponent<TextMeshProUGUI>();
+        hubManager.weaponPreviewImage = wepIconImg;
+        hubManager.weaponNameText = wepNameTmp;
         hubManager.weaponStatsText = wepStatsTmp;
 
-        hubManager.pistolButton = pistolBtn;
-        hubManager.shotgunButton = shotgunBtn;
-        hubManager.arcRifleButton = arcRifleBtn;
+        hubManager.weapon1Sprite = wep1Sprite;
+        hubManager.weapon2Sprite = wep2Sprite;
+        hubManager.weapon3Sprite = wep3Sprite;
+
+        hubManager.weapon1Button = wep1Btn;
+        hubManager.weapon2Button = wep2Btn;
+        hubManager.weapon3Button = wep3Btn;
 
         // Gán sự kiện cho nút Back và Deploy
         UnityEventTools.AddPersistentListener(backBtn.onClick, hubManager.BackToMainMenu);
@@ -207,14 +247,14 @@ public static class HubSceneBuilder
         EditorSceneManager.SaveScene(scene);
 
         EditorUtility.DisplayDialog("Thành công!", 
-            "Đã tự động dựng xong toàn bộ giao diện cho Scene Hub!\n\n" +
-            "• Đã kết nối Nhân vật Nam (Aiden) & Nữ (Elena)\n" +
-            "• Đã cấu hình 3 loại Vũ khí (Pistol, Shotgun, Arc Rifle)\n" +
-            "• Đã nối các sự kiện chuyển Scene với GameSessionData", "Tuyệt vời!");
+            "Đã nâng cấp Scene Hub hoàn tất!\n\n" +
+            "• Nhân vật Preview có hoạt ảnh bước đi sang phải tại chỗ\n" +
+            "• Đã tích hợp 3 Vũ khí từ items_outdated (Kiếm, Rìu, Trượng) kèm ảnh hiển thị và thông số\n" +
+            "• Đã kết nối đầy đủ các sự kiện!", "Tuyệt vời!");
     }
 
     // =========================================================================
-    // HÀM TIỆN ÍCH TẠO UI NHANH
+    // HÀM TIỆN ÍCH TẠO UI
     // =========================================================================
     private static GameObject CreateUIElement(string name, Transform parent)
     {
@@ -276,12 +316,11 @@ public static class HubSceneBuilder
         cb.pressedColor = new Color(0.15f, 0.16f, 0.2f, 1f);
         btn.colors = cb;
 
-        // Label bên trong nút
         GameObject textGo = CreateUIElement("Label", btnGo.transform);
         SetFullScreenStretch(textGo.GetComponent<RectTransform>());
         TextMeshProUGUI tmp = textGo.AddComponent<TextMeshProUGUI>();
         tmp.text = label;
-        tmp.fontSize = 20;
+        tmp.fontSize = 19;
         tmp.fontStyle = FontStyles.Bold;
         tmp.color = Color.white;
         tmp.alignment = TextAlignmentOptions.Center;

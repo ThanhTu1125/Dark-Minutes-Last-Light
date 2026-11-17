@@ -1,11 +1,11 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PlayerInteraction : MonoBehaviour
 {
     [Header("Interaction Settings")]
     [SerializeField] private float interactionRange = 1.5f;
     [SerializeField] private LayerMask interactableLayer;
-    [SerializeField] private KeyCode interactionKey = KeyCode.E;
 
     private IInteractable currentInteractable;
     private PlayerStatus playerStatus;
@@ -21,7 +21,14 @@ public class PlayerInteraction : MonoBehaviour
 
         DetectInteractable();
 
-        if (Input.GetKeyDown(interactionKey))
+        // Nhấn phím E từ New Input System
+        bool interactPressed = false;
+        if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
+        {
+            interactPressed = true;
+        }
+
+        if (interactPressed)
         {
             Interact();
         }
@@ -40,8 +47,7 @@ public class PlayerInteraction : MonoBehaviour
 
         foreach (Collider2D hit in hits)
         {
-            IInteractable interactable =
-                hit.GetComponent<IInteractable>();
+            IInteractable interactable = hit.GetComponent<IInteractable>();
 
             if (interactable == null)
                 interactable = hit.GetComponentInParent<IInteractable>();

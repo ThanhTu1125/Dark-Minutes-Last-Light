@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7712666999908483745}
   - component: {fileID: 5906309289699310009}
+  - component: {fileID: 2221784143742332263}
   m_Layer: 0
   m_Name: Ground
   m_TagString: Untagged
@@ -45,6 +46,42 @@ Grid:
   m_CellGap: {x: 0, y: 0, z: 0}
   m_CellLayout: 0
   m_CellSwizzle: 0
+--- !u!114 &2221784143742332263
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 929916033438377769}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66a8c6b4373c29744a9fed379c7a7e3d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChunkDecorator
+  treePrefabs:
+  - {fileID: 7416757567836405714, guid: 9fbdd7c6bd322494682236f80146e504, type: 3}
+  - {fileID: 4917615091072343465, guid: 8217f712771b2ce49a653c6634fd5117, type: 3}
+  - {fileID: 6748209185990538543, guid: df2f09933f4e95241ac9d5f9da51d53a, type: 3}
+  - {fileID: 988236472742238037, guid: 479772a9bf2dca342a0b1002e8443fe1, type: 3}
+  - {fileID: 722173459365690409, guid: 6d3f9e5b316bb4b4aabab12ef86db21a, type: 3}
+  - {fileID: 2483874389724558929, guid: 9b4ec9579fe75aa40bcd1c7b5b9e12a7, type: 3}
+  rockSprites:
+  - {fileID: -7187312687645305270, guid: e340685627bcdd549a1e0cc8f3308e08, type: 3}
+  - {fileID: -7386257474755204809, guid: 691ad77a013490c4c929680bd97ae5a9, type: 3}
+  - {fileID: -5149134790791671858, guid: 691ad77a013490c4c929680bd97ae5a9, type: 3}
+  - {fileID: -4425045917409265430, guid: 691ad77a013490c4c929680bd97ae5a9, type: 3}
+  - {fileID: -516603167571801937, guid: 691ad77a013490c4c929680bd97ae5a9, type: 3}
+  - {fileID: 1665711953458769838, guid: 691ad77a013490c4c929680bd97ae5a9, type: 3}
+  bushSprites:
+  - {fileID: -219912757961798916, guid: 691ad77a013490c4c929680bd97ae5a9, type: 3}
+  - {fileID: 1005101958320914242, guid: 691ad77a013490c4c929680bd97ae5a9, type: 3}
+  - {fileID: 6552889776755588209, guid: 691ad77a013490c4c929680bd97ae5a9, type: 3}
+  - {fileID: 7209383779109950796, guid: 691ad77a013490c4c929680bd97ae5a9, type: 3}
+  - {fileID: 5240540068817918603, guid: 7740f40c84e4d5a4e94c875a60a4c98c, type: 3}
+  - {fileID: 7436012795646802747, guid: 7740f40c84e4d5a4e94c875a60a4c98c, type: 3}
+  maxTrees: 4
+  maxRocks: 3
+  maxBushes: 4
 --- !u!1 &2744666836442031323
 GameObject:
   m_ObjectHideFlags: 0

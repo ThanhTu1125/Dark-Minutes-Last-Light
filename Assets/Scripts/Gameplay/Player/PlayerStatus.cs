@@ -4,9 +4,10 @@ using System;
 
 public class PlayerStatus : MonoBehaviour
 {
-    [Header("Máu")]
-    public int maxHealth = 100;
-    public float currentHealth;
+    [Header("Máu (Hệ thống 3 Trái Tim)")]
+    public int maxHealth = 3;
+    public float currentHealth = 3f;
+    [SerializeField] private float invincibilityDuration = 1.0f;
 
     [Header("Năng lượng")]
     public int maxEnergy = 100;
@@ -28,7 +29,15 @@ public class PlayerStatus : MonoBehaviour
 
     [Header("Trạng thái")]
     public bool isDead = false;
-    public bool IsInvincible { get; set; } = false;
+
+    private bool isHitInvincible = false;
+    private bool isDashInvincible = false;
+
+    public bool IsInvincible
+    {
+        get => isHitInvincible || isDashInvincible;
+        set => isDashInvincible = value;
+    }
 
     // Events để UI và các hệ thống khác theo dõi
     public event Action<float, float> OnHealthChanged;
@@ -61,7 +70,7 @@ public class PlayerStatus : MonoBehaviour
     }
 
     // =========================
-    // HỆ THỐNG MÁU
+    // HỆ THỐNG MÁU (3 TRÁI TIM)
     // =========================
 
     public void TakeDamage(int damage)
@@ -69,19 +78,26 @@ public class PlayerStatus : MonoBehaviour
         if (isDead || IsInvincible || damage <= 0)
             return;
 
-        currentHealth -= damage;
+        // Mỗi lần va chạm mất 1 trái tim
+        int heartsLost = 1;
+        currentHealth -= heartsLost;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
 
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
 
-        Debug.Log("Aiden nhận " + damage +
-                  " sát thương. HP: " + currentHealth);
+        Debug.Log($"Aiden mất {heartsLost} Trái Tim. Máu còn lại: {currentHealth}/{maxHealth}");
 
         if (currentHealth <= 0)
         {
             Die();
         }
+        else
+        {
+            // Bật thời gian bất tử ngắn và chớp nháy Sprite
+            TriggerInvincibility(invincibilityDuration);
+        }
     }
+
     public void takeDamage(int damage)
     {
         TakeDamage(damage);
@@ -92,12 +108,47 @@ public class PlayerStatus : MonoBehaviour
         if (isDead || amount <= 0)
             return;
 
-        currentHealth += amount;
+        // Hồi 1 trái tim
+        int heartsGained = 1;
+        currentHealth += heartsGained;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
 
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
 
-        Debug.Log("Đã hồi máu. HP: " + currentHealth);
+        Debug.Log($"Đã hồi phục {heartsGained} Trái Tim. Máu: {currentHealth}/{maxHealth}");
+    }
+
+    public void TriggerInvincibility(float duration)
+    {
+        if (gameObject.activeInHierarchy)
+        {
+            StartCoroutine(InvincibilityRoutine(duration));
+        }
+    }
+
+    private System.Collections.IEnumerator InvincibilityRoutine(float duration)
+    {
+        isHitInvincible = true;
+        SpriteRenderer sr = GetComponent<SpriteRenderer>();
+        Color originalColor = sr != null ? sr.color : Color.white;
+
+        float elapsed = 0f;
+        float blinkInterval = 0.1f;
+        bool isDimmed = false;
+
+        while (elapsed < duration)
+        {
+            elapsed += blinkInterval;
+            isDimmed = !isDimmed;
+            if (sr != null)
+            {
+                sr.color = isDimmed ? new Color(originalColor.r, originalColor.g, originalColor.b, 0.25f) : originalColor;
+            }
+            yield return new WaitForSeconds(blinkInterval);
+        }
+
+        if (sr != null) sr.color = originalColor;
+        isHitInvincible = false;
     }
 
     public void Die()
@@ -105,7 +156,8 @@ public class PlayerStatus : MonoBehaviour
         if (isDead) return;
 
         isDead = true;
-        IsInvincible = false;
+        isHitInvincible = false;
+        isDashInvincible = false;
 
         Debug.Log("Aiden đã chết! GAME OVER");
 
@@ -148,13 +200,12 @@ public class PlayerStatus : MonoBehaviour
         // Tăng lượng EXP cần thiết cho cấp tiếp theo
         experienceToNextLevel += 50;
 
-        // Tăng chỉ số nhân vật
-        maxHealth += 20;
+        // Tăng chỉ số nhân vật (Hồi phục toàn bộ trái tim khi lên cấp)
+        currentHealth = maxHealth;
         maxEnergy += 10;
         maxStrength += 5;
 
         // Cập nhật chỉ số hiện tại
-        currentHealth = maxHealth;
         currentEnergy = maxEnergy;
         currentStrength = maxStrength;
 
